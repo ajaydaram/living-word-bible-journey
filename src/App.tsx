@@ -42,6 +42,9 @@ import {
   type NarrativeMovementId,
   type PersonaId,
 } from './data/unifiedFramework';
+import { chronologicalPath, getJesusContextForChapter, type ActId } from './data/chronologicalPath';
+import { CovenantTracker } from './components/CovenantTracker';
+import { WhereIsJesus } from './components/WhereIsJesus';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -81,6 +84,11 @@ export default function App() {
   const [lastRequestedRef, setLastRequestedRef] = useState('');
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [useFullBibleMode, setUseFullBibleMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('bible-use-full-bible-mode');
+    return saved === 'true';
+  });
 
   const onboardingSteps = [
     {
@@ -159,6 +167,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('bible-onboarding-dismissed', onboardingDismissed ? 'true' : 'false');
   }, [onboardingDismissed]);
+
+  useEffect(() => {
+    localStorage.setItem('bible-use-full-bible-mode', useFullBibleMode ? 'true' : 'false');
+  }, [useFullBibleMode]);
 
   useEffect(() => {
     if (!reinforcementToast) return;
@@ -711,6 +723,17 @@ export default function App() {
 
             {showExpandedDashboard && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+              <div>
+                <CovenantTracker 
+                  currentChapter={selectedStory?.id ?? completedStories.length} 
+                  totalChapters={100}
+                />
+              </div>
+            </section>
+            )}
+
+            {showExpandedDashboard && (
+            <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div className="bg-paper p-6 lg:p-8 rounded-[28px] card-shadow overflow-hidden relative">
                 <div className="flex items-center gap-3 mb-4 text-clay">
                   <Layers3 className="w-4 h-4" />
@@ -1057,7 +1080,10 @@ export default function App() {
 
                       <div className="space-y-6 pt-6">
                         <div className="flex items-center justify-between">
-                          <div className="section-label">THE SCRIPTURE</div>
+                          <div className="flex items-center gap-3">
+                            <div className="section-label">THE SCRIPTURE</div>
+                            <WhereIsJesus context={getJesusContextForChapter(selectedStory.id)} reference={selectedStory.reference} />
+                          </div>
                           <div className="flex gap-2">
                             <button className="p-2.5 bg-bg-warm hover:bg-sand rounded-full text-clay transition-all" aria-label="Play audio" title="Play audio">
                               <Volume2 className="w-4 h-4" />
