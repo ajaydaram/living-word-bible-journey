@@ -46,6 +46,7 @@ import { chronologicalPath, getJesusContextForChapter, acts, type ActId } from '
 import { CovenantTracker } from './components/CovenantTracker';
 import { WhereIsJesus } from './components/WhereIsJesus';
 import { TimelineVisualizer } from './components/TimelineVisualizer';
+import { DeepDivePanel } from './components/DeepDivePanel';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -88,6 +89,11 @@ export default function App() {
   const [useFullBibleMode, setUseFullBibleMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem('bible-use-full-bible-mode');
+    return saved === 'true';
+  });
+  const [showSupplementalSections, setShowSupplementalSections] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('bible-show-supplemental-sections');
     return saved === 'true';
   });
 
@@ -172,6 +178,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('bible-use-full-bible-mode', useFullBibleMode ? 'true' : 'false');
   }, [useFullBibleMode]);
+
+  useEffect(() => {
+    localStorage.setItem('bible-show-supplemental-sections', showSupplementalSections ? 'true' : 'false');
+  }, [showSupplementalSections]);
 
   useEffect(() => {
     if (!reinforcementToast) return;
@@ -965,6 +975,21 @@ export default function App() {
                             'Mark as Completed'
                           )}
                         </button>
+                        <button
+                          onClick={() => setShowSupplementalSections(!showSupplementalSections)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all border ${
+                            showSupplementalSections
+                              ? 'bg-purple-100 text-purple-900 border-purple-300'
+                              : 'bg-bg-warm text-purple-700 border-purple-200 hover:border-purple-400'
+                          }`}
+                          title="Show supplemental chapters (genealogies, laws, etc.)"
+                        >
+                          {showSupplementalSections ? (
+                            <><Eye className="w-4 h-4" /> Deep Dive</>
+                          ) : (
+                            <><EyeOff className="w-4 h-4" /> Deep Dive</>
+                          )}
+                        </button>
                       </div>
                     </header>
 
@@ -1173,6 +1198,24 @@ export default function App() {
                           </div>
                         )}
                       </div>
+
+                      {/* Deep Dive Panel - Show supplemental chapters */}
+                      {showSupplementalSections && selectedStory && (
+                        <DeepDivePanel 
+                          storyId={selectedStory.id}
+                          storyAct={(() => {
+                            if (selectedStory.id <= 5) return 1;
+                            if (selectedStory.id <= 15) return 2;
+                            if (selectedStory.id <= 25) return 3;
+                            if (selectedStory.id <= 35) return 4;
+                            if (selectedStory.id <= 45) return 5;
+                            if (selectedStory.id <= 55) return 6;
+                            if (selectedStory.id <= 75) return 7;
+                            return 8;
+                          })()}
+                          visible={true}
+                        />
+                      )}
                     </div>
                   </article>
 

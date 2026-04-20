@@ -17,6 +17,7 @@ export interface ChapterEntry {
   chapter: number;
   reference: string;
   isMilestone: boolean;
+  isNarrative: boolean; // true for story chapters, false for supplemental (genealogies, laws, etc.)
   title: string;
   summary: string;
   connection: string;
@@ -140,6 +141,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 1,
     reference: 'Genesis 1:1–2:3',
     isMilestone: true,
+    isNarrative: true,
     title: 'The Beginning',
     summary: 'God creates heaven, earth, light, sky, land, vegetation, celestial bodies, animals, and humanity in His image.',
     connection: 'Sets the stage for all history: God is Creator, humanity is made in His image, and all creation is good.',
@@ -153,6 +155,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 2,
     reference: 'Genesis 2:4–3:24',
     isMilestone: true,
+    isNarrative: true,
     title: 'The Fall',
     summary: 'God creates Adam and Eve. They disobey God by eating the forbidden fruit. Sin enters the world, and God promises a Redeemer.',
     connection: 'The reason why redemption is necessary. God\'s first promise of salvation comes after humanity\'s first sin.',
@@ -166,9 +169,10 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 3,
     reference: 'Genesis 4:1–5:32',
     isMilestone: false,
+    isNarrative: false,
     title: 'Cain and Abel, and the Genealogy',
     summary: 'Adam and Eve have sons. Cain kills Abel out of jealousy. Seth is born to replace Abel. The genealogy from Adam to Noah is listed.',
-    connection: 'Shows sin multiplies among humanity. The genealogy demonstrates God\'s preservation of a line leading to Noah.',
+    connection: 'DEEP DIVE: Shows sin multiplies among humanity. The genealogy demonstrates God\'s preservation of a line leading to Noah.',
     covenants: ['adamic'],
     themes: ['Sin', 'Genealogy', 'Preservation']
   },
@@ -179,6 +183,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 4,
     reference: 'Genesis 6:1–7:24',
     isMilestone: true,
+    isNarrative: true,
     title: 'The Flood',
     summary: 'Humanity becomes increasingly sinful. God decides to flood the earth but saves Noah and his family, plus representatives of all animals.',
     connection: 'God\'s judgment on sin, but also His mercy toward the righteous. The flood resets creation but doesn\'t erase God\'s purpose.',
@@ -192,6 +197,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 5,
     reference: 'Genesis 8:1–9:17',
     isMilestone: true,
+    isNarrative: true,
     title: 'God\'s Covenant with Noah',
     summary: 'After the flood, God establishes a covenant with Noah never to destroy the earth by water again. The rainbow is the sign of this covenant.',
     connection: 'God restores creation and establishes a covenant of preservation. The rainbow becomes a perpetual sign of God\'s faithfulness.',
@@ -205,6 +211,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 6,
     reference: 'Genesis 11:1–11:9',
     isMilestone: true,
+    isNarrative: true,
     title: 'Tower of Babel',
     summary: 'Humanity attempts to build a tower to reach heaven. God confuses their languages and scatters them across the earth.',
     connection: 'Shows humanity\'s pride and rebellion even after the flood. God\'s judgment results in dispersion and division of nations.',
@@ -218,6 +225,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 7,
     reference: 'Genesis 12:1–12:20',
     isMilestone: true,
+    isNarrative: true,
     title: 'The Call of Abram',
     summary: 'God calls Abram to leave his country and go to a land God will show him. God promises to make him a great nation and bless all peoples through him.',
     connection: 'The beginning of God\'s redemptive plan through one family. The Abrahamic Covenant becomes the pivot point of Old Testament history.',
@@ -231,6 +239,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 8,
     reference: 'Genesis 15:1–15:21',
     isMilestone: true,
+    isNarrative: true,
     title: 'God\'s Covenant with Abram',
     summary: 'God reaffirms His covenant with Abram in a formal ritual. He promises descendants as numerous as the stars and the land of Canaan.',
     connection: 'Solidifies the covenant. Despite Abram\'s doubts, God commits to His promise. The covenant is God\'s initiative and grace.',
@@ -244,6 +253,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 9,
     reference: 'Genesis 21:1–22:19',
     isMilestone: true,
+    isNarrative: true,
     title: 'Isaac\'s Birth and Sacrifice',
     summary: 'Isaac is born to Abraham and Sarah in their old age. God tests Abraham by asking him to sacrifice Isaac. Abraham obeys, but God provides a ram instead.',
     connection: 'Demonstrates Abraham\'s faith. Foreshadows Jesus\' sacrifice on the cross—a son given by God, willing to be sacrificed.',
@@ -257,6 +267,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 10,
     reference: 'Genesis 27:1–28:22',
     isMilestone: true,
+    isNarrative: true,
     title: 'Jacob and Esau Compete',
     summary: 'Esau sells his birthright to Jacob for a meal. Jacob deceives Isaac and steals Esau\'s blessing. Jacob flees and has a dream of a ladder to heaven.',
     connection: 'Shows how the covenant passes to Jacob, not through strength but through God\'s choice. Jacob\'s wrestling with God comes next.',
@@ -273,6 +284,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 1,
     reference: 'Exodus 1:1–2:25',
     isMilestone: true,
+    isNarrative: true,
     title: 'Birth of Moses',
     summary: 'The Israelites are enslaved in Egypt. A new pharaoh fears their numbers and orders male babies killed. Moses is born and hidden, then raised in Pharaoh\'s palace.',
     connection: 'God preserves Moses to lead the exodus. The stage is set for God\'s greatest deliverance in the Old Testament.',
@@ -286,6 +298,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 2,
     reference: 'Exodus 3:1–4:17',
     isMilestone: true,
+    isNarrative: true,
     title: 'The Burning Bush',
     summary: 'Moses encounters God in a burning bush. God reveals His name (I AM) and commands Moses to return to Egypt to lead the people out of slavery.',
     connection: 'God\'s self-revelation to Moses. God\'s name "I AM" becomes foundational to understanding His eternal nature and power.',
@@ -299,6 +312,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 3,
     reference: 'Exodus 6:28–11:10',
     isMilestone: true,
+    isNarrative: true,
     title: 'The Ten Plagues',
     summary: 'Pharaoh refuses to let the people go. God sends ten plagues: water to blood, frogs, gnats, flies, livestock disease, boils, hail, locusts, darkness, and death of the firstborn.',
     connection: 'God demonstrates His power over Egypt\'s gods. Each plague reveals God\'s sovereignty and Pharaoh\'s hardened heart.',
@@ -312,6 +326,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 4,
     reference: 'Exodus 12:1–12:42',
     isMilestone: true,
+    isNarrative: true,
     title: 'Passover and Exodus',
     summary: 'God institutes the Passover. Israelites mark their doorposts with lamb\'s blood. The angel of death passes over their homes. Pharaoh releases them, and they depart Egypt.',
     connection: 'The Passover becomes the central redemptive act of the Old Testament. Jesus is the Lamb of God whose blood saves us.',
@@ -325,6 +340,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 5,
     reference: 'Exodus 13:17–14:31',
     isMilestone: true,
+    isNarrative: true,
     title: 'Crossing the Red Sea',
     summary: 'Israel leaves Egypt. Pharaoh chases them. God parts the Red Sea. Israel crosses on dry ground. The Egyptian army is destroyed.',
     connection: 'The ultimate deliverance. God\'s power is on full display. The sea becomes a barrier between slavery and freedom.',
@@ -341,6 +357,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 1,
     reference: 'Matthew 1:1–2:23',
     isMilestone: true,
+    isNarrative: true,
     title: 'Birth of Jesus',
     summary: 'Matthew traces Jesus\' genealogy through David. Jesus is born in Bethlehem. Wise men visit Him with gifts. Joseph flees to Egypt to protect Him.',
     connection: 'The promised Messiah arrives. The genealogy connects Jesus to Abraham and David, showing how all covenants converge in Him.',
@@ -354,6 +371,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 2,
     reference: 'Matthew 3:1–4:11',
     isMilestone: true,
+    isNarrative: true,
     title: 'Baptism and Temptation of Jesus',
     summary: 'John baptizes Jesus. The Holy Spirit descends on Him. Jesus is led into the wilderness and tempted by Satan for forty days.',
     connection: 'Jesus is publicly declared as God\'s Son. His temptation recalls Israel\'s wilderness wandering. Jesus overcomes what Israel could not.',
@@ -367,6 +385,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 3,
     reference: 'Matthew 5:1–7:29',
     isMilestone: true,
+    isNarrative: true,
     title: 'Sermon on the Mount',
     summary: 'Jesus teaches the Beatitudes and the ethics of the kingdom: love your enemies, forgive, give in secret, don\'t worry, judge not.',
     connection: 'Jesus redefines righteousness. The kingdom of God is about the heart, not external conformity. This is the New Covenant ethic.',
@@ -383,6 +402,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 1,
     reference: 'Acts 1:1–2:47',
     isMilestone: true,
+    isNarrative: true,
     title: 'Pentecost and the Church\'s Birth',
     summary: 'Jesus ascends. The disciples wait for the Holy Spirit. On Pentecost, the Spirit falls. Peter preaches, and 3,000 believe. The Church is born.',
     connection: 'The Holy Spirit empowers the disciples. The Church is now the vehicle for God\'s redemptive mission to all nations.',
@@ -396,6 +416,7 @@ export const chronologicalPath: ChapterEntry[] = [
     chapter: 22,
     reference: 'Revelation 21:1–22:21',
     isMilestone: true,
+    isNarrative: true,
     title: 'New Heaven and New Earth',
     summary: 'John sees a new heaven and new earth. God\'s dwelling place is with humanity. There is no more pain, death, or tears. Jesus says, "I am coming soon."',
     connection: 'The redemptive story concludes. All that was broken in Genesis 3 is restored. God and humanity dwell together forever.',
@@ -434,4 +455,45 @@ export function getJesusContextForChapter(chapterId: number): string {
   };
 
   return contextMap[chapter.act] || 'Jesus is the center of all Scripture.';
+}
+
+/**
+ * Get supplemental (non-narrative) chapters for a given story ID
+ * These are genealogies, laws, and other foundational material
+ */
+export function getSupplementalChaptersForStory(storyId: number): ChapterEntry[] {
+  // Find the current story's chapters
+  const storyChapters = chronologicalPath.filter(ch => ch.isMilestone && ch.id <= storyId);
+  if (storyChapters.length === 0) return [];
+  
+  const lastStory = storyChapters[storyChapters.length - 1];
+  const currentAct = lastStory.act;
+  
+  // Get all supplemental chapters for the same act that come after this story but before the next narrative milestone
+  const nextMilestone = chronologicalPath.find(ch => ch.isMilestone && ch.id > lastStory.id && ch.act === currentAct);
+  const nextStoryId = nextMilestone?.id || Infinity;
+  
+  return chronologicalPath.filter(ch => 
+    !ch.isMilestone && 
+    !ch.isNarrative && 
+    ch.act === currentAct && 
+    ch.id > lastStory.id && 
+    ch.id < nextStoryId
+  );
+}
+
+/**
+ * Get all narrative chapters (milestones) for a given Act
+ */
+export function getNarrativeChaptersForAct(actId: ActId): ChapterEntry[] {
+  return chronologicalPath.filter(ch => ch.isMilestone && ch.isNarrative && ch.act === actId);
+}
+
+/**
+ * Count total chapters (narrative + supplemental) read for user progress
+ */
+export function getChaptersReadCount(showSupplemental: boolean, userProgress: number): number {
+  const chaptersToCount = showSupplemental ? chronologicalPath : chronologicalPath.filter(ch => ch.isNarrative || ch.isMilestone);
+  const chaptersRead = Math.floor((userProgress / 100) * chaptersToCount.length);
+  return chaptersRead;
 }
