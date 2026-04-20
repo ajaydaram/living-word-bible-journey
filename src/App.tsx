@@ -299,6 +299,7 @@ export default function App() {
   const chapterByReference = useMemo(() => new Map(chronologicalPath.map(ch => [ch.reference, ch])), []);
   const activeReadingChapter = activeReadingReference ? chapterByReference.get(activeReadingReference) : null;
   const showExpandedDashboard = isDesktopLayout || showDashboardDetails;
+  const shouldSimplifyLanding = !selectedStory && !isDesktopLayout;
   const todayPrompt = dailyPrompts[new Date().getDay() % dailyPrompts.length];
   const selectedIsCompleted = selectedStory ? completedStories.includes(selectedStory.id) : false;
   const suggestedNextStory = selectedStory
@@ -429,6 +430,10 @@ export default function App() {
     const streakLabel = streakCount > 0 ? `${streakCount}-day streak` : 'first step today';
     setReinforcementToast(`Continuing at ${story.id.toString().padStart(2, '0')} ${story.title}. ${streakLabel}.`);
     openStory(story);
+  };
+
+  const showInfoToast = (message: string) => {
+    setReinforcementToast(message);
   };
 
   const handleInstallApp = async () => {
@@ -796,10 +801,10 @@ export default function App() {
                 <div className="pt-6 border-t border-ink/5">
                   <div className="section-label">STUDY TOOLS</div>
                   <div className="flex flex-col gap-2">
-                    <button className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-paper/50 transition-all text-sm font-serif italic text-clay">
+                    <button onClick={() => showInfoToast('Use the Daily Reflection Prompt card in Today after reading one story.')} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-paper/50 transition-all text-sm font-serif italic text-clay">
                       <Sparkles className="w-4 h-4" /> Daily Reflection
                     </button>
-                    <button className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-paper/50 transition-all text-sm font-serif italic text-clay">
+                    <button onClick={() => showInfoToast('Bookmarks are coming soon. Use Mark as Completed for now.')} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-paper/50 transition-all text-sm font-serif italic text-clay">
                       <Bookmark className="w-4 h-4" /> Bookmarked Verses
                     </button>
                   </div>
@@ -828,7 +833,7 @@ export default function App() {
                 </button>
               </div>
             </section>
-            {!onboardingDismissed && (
+            {!shouldSimplifyLanding && !onboardingDismissed && (
               <section className="bg-paper p-4 sm:p-6 lg:p-7 rounded-[24px] card-shadow border border-ink/5">
                 <div className="section-label">GET ORIENTED</div>
                 <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
@@ -864,6 +869,34 @@ export default function App() {
               </section>
             )}
 
+            {shouldSimplifyLanding && (
+              <section className="bg-paper p-5 rounded-[24px] card-shadow border border-ink/5 space-y-4">
+                <div>
+                  <div className="section-label">START HERE</div>
+                  <h2 className="text-3xl font-serif text-olive leading-tight mt-1">One simple path for today.</h2>
+                  <p className="text-sm text-ink/65 mt-2 leading-relaxed">Start with one story only. We will open Creation and take you to the reading panel directly.</p>
+                </div>
+                <div className="rounded-2xl border border-ink/10 bg-bg-warm/70 p-4">
+                  <div className="text-[10px] uppercase tracking-widest font-bold text-clay mb-2">Step 1</div>
+                  <div className="font-serif text-xl text-olive">Tap Start Reading (Creation)</div>
+                  <div className="text-xs text-ink/65 mt-1">After that, use Continue each day.</div>
+                </div>
+                <button
+                  onClick={() => handleSelectStory(bibleStories[0], bibleStories[0].reference)}
+                  className="w-full px-4 py-4 rounded-2xl bg-olive text-bg-warm text-xs font-bold uppercase tracking-widest"
+                >
+                  Start Reading (Creation)
+                </button>
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="w-full px-4 py-3 rounded-2xl border border-ink/10 bg-paper text-olive text-xs font-bold uppercase tracking-widest"
+                >
+                  Browse Stories Instead
+                </button>
+              </section>
+            )}
+
+            {!shouldSimplifyLanding && (
             <section className="bg-paper p-4 sm:p-6 lg:p-8 rounded-[28px] card-shadow border border-ink/5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr] items-start">
               <div>
                 <div className="section-label">QUICK START</div>
@@ -890,7 +923,9 @@ export default function App() {
                 </button>
               </div>
             </section>
+            )}
 
+            {!shouldSimplifyLanding && (
             <section className="bg-paper p-4 sm:p-6 lg:p-8 rounded-[24px] card-shadow border border-ink/5 grid gap-4 lg:grid-cols-[0.75fr_1.25fr] items-start">
               <div>
                 <div className="section-label">TODAY</div>
@@ -924,8 +959,9 @@ export default function App() {
                 {showDashboardDetails ? 'Collapse dashboard' : 'Expand dashboard'}
               </button>
             </section>
+            )}
 
-            {showExpandedDashboard && (
+            {showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div>
                 <TimelineVisualizer 
@@ -942,7 +978,7 @@ export default function App() {
             </section>
             )}
 
-            {showExpandedDashboard && (
+            {showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div>
                 <CovenantTracker 
@@ -953,7 +989,7 @@ export default function App() {
             </section>
             )}
 
-            {showExpandedDashboard && (
+            {showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div className="bg-paper p-6 lg:p-8 rounded-[28px] card-shadow overflow-hidden relative">
                 <div className="flex items-center gap-3 mb-4 text-clay">
@@ -1336,7 +1372,7 @@ export default function App() {
                             />
                           </div>
                           <div className="flex gap-2">
-                            <button className="p-2.5 bg-bg-warm hover:bg-sand rounded-full text-clay transition-all" aria-label="Play audio" title="Play audio">
+                            <button className="p-2.5 bg-bg-warm hover:bg-sand rounded-full text-clay transition-all" aria-label="Play audio" title="Play audio" onClick={() => showInfoToast('Audio playback is not enabled yet for this version.')}>
                               <Volume2 className="w-4 h-4" />
                             </button>
                             <button className="p-2.5 bg-bg-warm hover:bg-sand rounded-full text-clay transition-all" aria-label="Share this story" title="Share this story" onClick={() => {
