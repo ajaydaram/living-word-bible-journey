@@ -42,9 +42,10 @@ import {
   type NarrativeMovementId,
   type PersonaId,
 } from './data/unifiedFramework';
-import { chronologicalPath, getJesusContextForChapter, type ActId } from './data/chronologicalPath';
+import { chronologicalPath, getJesusContextForChapter, acts, type ActId } from './data/chronologicalPath';
 import { CovenantTracker } from './components/CovenantTracker';
 import { WhereIsJesus } from './components/WhereIsJesus';
+import { TimelineVisualizer } from './components/TimelineVisualizer';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -724,6 +725,23 @@ export default function App() {
             {showExpandedDashboard && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div>
+                <TimelineVisualizer 
+                  currentStoryId={selectedStory?.id ?? completedStories.length + 1} 
+                  totalStories={100}
+                  onActClick={(actId) => {
+                    // Jump to first story of Act
+                    const actStartMap: Record<ActId, number> = { 1: 1, 2: 6, 3: 16, 4: 26, 5: 36, 6: 46, 7: 56, 8: 66 };
+                    const storyId = actStartMap[actId];
+                    if (storyId) handleSelectStory(bibleStories[storyId - 1]);
+                  }}
+                />
+              </div>
+            </section>
+            )}
+
+            {showExpandedDashboard && (
+            <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+              <div>
                 <CovenantTracker 
                   currentChapter={selectedStory?.id ?? completedStories.length} 
                   totalChapters={100}
@@ -899,6 +917,26 @@ export default function App() {
                   <article className="bg-paper p-8 lg:p-12 rounded-[32px] card-shadow relative overflow-hidden">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       <div className="story-meta">Story {selectedStory.id === 100 ? 'One Hundred' : `No. ${selectedStory.id}`}</div>
+                      {/* Act Badge */}
+                      {selectedStory && (() => {
+                        let actId: ActId = 1;
+                        if (selectedStory.id <= 5) actId = 1;
+                        else if (selectedStory.id <= 15) actId = 2;
+                        else if (selectedStory.id <= 25) actId = 3;
+                        else if (selectedStory.id <= 35) actId = 4;
+                        else if (selectedStory.id <= 45) actId = 5;
+                        else if (selectedStory.id <= 55) actId = 6;
+                        else if (selectedStory.id <= 65) actId = 7;
+                        else actId = 8;
+                        
+                        const act = acts[actId];
+                        const actColors = ['bg-amber-100 text-amber-900', 'bg-orange-100 text-orange-900', 'bg-red-100 text-red-900', 'bg-rose-100 text-rose-900', 'bg-pink-100 text-pink-900', 'bg-purple-100 text-purple-900', 'bg-indigo-100 text-indigo-900', 'bg-blue-100 text-blue-900'];
+                        return (
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${actColors[actId - 1]}`}>
+                            Act {actId}: {act.title}
+                          </span>
+                        );
+                      })()}
                       {selectedMovement && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-bg-warm text-olive">{selectedMovement.label}</span>}
                       {!guidedMode && selectedCovenant && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-sand text-clay">{selectedCovenant.label}</span>}
                       {!guidedMode && selectedThemes.slice(0, 2).map(theme => (
