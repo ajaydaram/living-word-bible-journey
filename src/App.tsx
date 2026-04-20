@@ -300,6 +300,7 @@ export default function App() {
   const activeReadingChapter = activeReadingReference ? chapterByReference.get(activeReadingReference) : null;
   const showExpandedDashboard = isDesktopLayout || showDashboardDetails;
   const shouldSimplifyLanding = !selectedStory && !isDesktopLayout;
+  const isMobileReading = !!selectedStory && !isDesktopLayout;
   const todayPrompt = dailyPrompts[new Date().getDay() % dailyPrompts.length];
   const selectedIsCompleted = selectedStory ? completedStories.includes(selectedStory.id) : false;
   const suggestedNextStory = selectedStory
@@ -816,7 +817,7 @@ export default function App() {
 
         {/* Main Content View */}
         <main className="flex-1 flex flex-col h-full bg-bg-warm overflow-y-auto">
-          <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-12 py-8 sm:py-10 lg:py-16 space-y-8 sm:space-y-10 lg:space-y-12">
+          <div className={`max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-12 ${isMobileReading ? 'py-4 space-y-4' : 'py-8 sm:py-10 lg:py-16 space-y-8 sm:space-y-10 lg:space-y-12'}`}>
             <section className="lg:hidden sticky top-0 z-20 bg-bg-warm/95 backdrop-blur supports-[backdrop-filter]:bg-bg-warm/80 border border-ink/5 rounded-2xl p-3">
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -1153,7 +1154,7 @@ export default function App() {
                   className="space-y-12 pb-20"
                 >
                   {/* Story Card */}
-                  <article ref={storyPanelRef} className="bg-paper p-8 lg:p-12 rounded-[32px] card-shadow relative overflow-hidden">
+                  <article ref={storyPanelRef} className="bg-paper p-4 sm:p-6 lg:p-12 rounded-[24px] sm:rounded-[32px] card-shadow relative overflow-hidden">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       <div className="story-meta">Story {selectedStory.id === 100 ? 'One Hundred' : `No. ${selectedStory.id}`}</div>
                       {/* Act Badge */}
@@ -1170,8 +1171,8 @@ export default function App() {
                         </span>
                       ))}
                     </div>
-                    <header className="space-y-6 mb-12">
-                      <h1 className="text-5xl lg:text-7xl font-serif text-olive leading-tight max-w-2xl">
+                    <header className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 lg:mb-12">
+                      <h1 className="text-3xl sm:text-4xl lg:text-7xl font-serif text-olive leading-tight max-w-2xl">
                         {selectedStory.title}
                       </h1>
                       <div className="flex flex-wrap items-center gap-4">
@@ -1227,19 +1228,19 @@ export default function App() {
                     )}
 
                     {/* Context and Scripture */}
-                    <div className="space-y-8">
-                      <div className="bg-sand/30 p-8 rounded-2xl border border-ink/5 relative group">
+                    <div className="space-y-4 sm:space-y-8">
+                      <div className="bg-sand/30 p-4 sm:p-6 lg:p-8 rounded-2xl border border-ink/5 relative group">
                         <div className="flex items-center gap-3 text-clay mb-6">
                           <BookOpen className="w-4 h-4" />
                           <h3 className="section-label mb-0">STORY CONTEXT</h3>
                         </div>
                         
-                        <div className="text-ink/80 leading-relaxed font-serif text-lg lg:text-xl italic whitespace-pre-wrap">
+                        <div className="text-ink/80 leading-relaxed font-serif text-base sm:text-lg lg:text-xl italic whitespace-pre-wrap">
                           {selectedStory.context}
                         </div>
                       </div>
 
-                      <div className={`p-5 rounded-2xl border ${personaLiveGuidance.cardClass}`}>
+                      <div className={`p-4 sm:p-5 rounded-2xl border ${personaLiveGuidance.cardClass}`}>
                         <div className="section-label mb-1">PERSONA LENS</div>
                         <div className="font-serif text-2xl text-olive mb-2">{personaLiveGuidance.headline}</div>
                         <div className="text-sm text-ink/70 leading-relaxed">{personaLiveGuidance.detail}</div>
@@ -1362,7 +1363,7 @@ export default function App() {
                       </div>
                       )}
 
-                      <div className="space-y-6 pt-6">
+                      <div className="space-y-4 sm:space-y-6 pt-2 sm:pt-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="section-label">THE SCRIPTURE</div>
@@ -1395,7 +1396,7 @@ export default function App() {
                           </div>
                         ) : (
                           <div className="space-y-4">
-                            <div className="text-2xl lg:text-3xl font-serif text-ink leading-[1.6] italic pr-4 lg:pr-8">
+                            <div className="text-base sm:text-xl lg:text-3xl font-serif text-ink leading-[1.75] italic pr-0 sm:pr-4 lg:pr-8">
                               {bibleText || "Searching for the scripture text..."}
                             </div>
                             {scriptureError && (
