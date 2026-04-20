@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   BookOpen, 
@@ -42,18 +42,38 @@ import {
   type NarrativeMovementId,
   type PersonaId,
 } from './data/unifiedFramework';
-import { chronologicalPath, getJesusContextForChapter, acts, type ActId } from './data/chronologicalPath';
+import {
+  chronologicalPath,
+  getJesusContextForChapter,
+  getMilestoneForStory,
+  getStoryIdForChapter,
+  acts,
+  type ActId,
+} from './data/chronologicalPath';
 import { CovenantTracker } from './components/CovenantTracker';
 import { WhereIsJesus } from './components/WhereIsJesus';
 import { TimelineVisualizer } from './components/TimelineVisualizer';
 import { DeepDivePanel } from './components/DeepDivePanel';
+import { FullBibleModeToggle } from './components/FullBibleModeToggle';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+function getActIdFromStoryId(storyId: number): ActId {
+  if (storyId <= 5) return 1;
+  if (storyId <= 15) return 2;
+  if (storyId <= 25) return 3;
+  if (storyId <= 35) return 4;
+  if (storyId <= 45) return 5;
+  if (storyId <= 55) return 6;
+  if (storyId <= 65) return 7;
+  return 8;
+}
+
 export default function App() {
+  const storyPanelRef = useRef<HTMLElement | null>(null);
   const [selectedStory, setSelectedStory] = useState<BibleStory | null>(null);
   const [completedStories, setCompletedStories] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,6 +104,7 @@ export default function App() {
   const [scriptureCache, setScriptureCache] = useState<Record<string, string>>({});
   const [scriptureError, setScriptureError] = useState('');
   const [lastRequestedRef, setLastRequestedRef] = useState('');
+  const [activeReadingReference, setActiveReadingReference] = useState('');
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [useFullBibleMode, setUseFullBibleMode] = useState(() => {
@@ -241,6 +262,25 @@ export default function App() {
     });
   }, [activeMovement, activeTheme, searchQuery]);
 
+  // When Full Bible Mode is on, show all chapters from chronologicalPath
+  const fullBibleChapters = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return chronologicalPath.filter(ch => {
+      const matchesSearch = !query || ch.title.toLowerCase().includes(query) || ch.reference.toLowerCase().includes(query);
+      return matchesSearch;
+    });
+  }, [searchQuery]);
+
+  // Group full Bible chapters by Act for display
+  const fullBibleByAct = useMemo(() => {
+    const grouped: Record<number, typeof chronologicalPath> = {};
+    fullBibleChapters.forEach(ch => {
+      if (!grouped[ch.act]) grouped[ch.act] = [];
+      grouped[ch.act].push(ch);
+    });
+    return grouped;
+  }, [fullBibleChapters]);
+
   const activePersonaProfile = personas.find(persona => persona.id === activePersona) ?? personas[0];
   const selectedMovement = selectedStory ? getNarrativeMovement(selectedStory.id) : null;
   const selectedCovenant = selectedStory ? getCovenantNode(selectedStory.id) : null;
@@ -250,6 +290,14 @@ export default function App() {
   const activeExplorerStories = bibleStories.filter(story => activeExplorerThread.storyIds.includes(story.id));
   const nextUnfinishedStory = bibleStories.find(story => !completedStories.includes(story.id)) ?? bibleStories[0];
   const resumeStory = (lastReadStoryId ? bibleStories.find(story => story.id === lastReadStoryId) : undefined) ?? nextUnfinishedStory;
+  const selectedMilestoneChapter = selectedStory ? getMilestoneForStory(selectedStory.id) : null;
+  const selectedActId = selectedMilestoneChapter?.act ?? (selectedStory ? getActIdFromStoryId(selectedStory.id) : null);
+  const selectedStoryAct = selectedActId ? acts[selectedActId] : null;
+  const selectedActFallbackChapterId = selectedActId
+    ? (chronologicalPath.find(ch => ch.act === selectedActId)?.id ?? null)
+    : null;
+  const chapterByReference = useMemo(() => new Map(chronologicalPath.map(ch => [ch.reference, ch])), []);
+  const activeReadingChapter = activeReadingReference ? chapterByReference.get(activeReadingReference) : null;
   const showExpandedDashboard = isDesktopLayout || showDashboardDetails;
   const todayPrompt = dailyPrompts[new Date().getDay() % dailyPrompts.length];
   const selectedIsCompleted = selectedStory ? completedStories.includes(selectedStory.id) : false;
@@ -296,6 +344,82 @@ export default function App() {
     };
   }, [activePersona, selectedStory, selectedMovement, selectedCovenant, selectedThemes]);
 
+  const personaLiveGuidance = useMemo(() => {
+    if (!selectedStory) {
+      if (activePersona === 'disoriented-reader') {
+        return {
+          headline: 'One step at a time.',
+          detail: 'Use Continue to open exactly one story, read the context first, and stop there for today.',
+          chipClass: 'bg-amber-100 text-amber-900 border-amber-300',
+          cardClass: 'bg-amber-50 border-amber-200',
+          continueLabel: 'Continue One Step',
+        };
+      }
+
+      if (activePersona === 'visual-learner') {
+        return {
+          headline: 'Follow the arc visually.',
+          detail: 'Use Continue to keep the narrative flow and watch where this scene fits in the larger story.',
+          chipClass: 'bg-sky-100 text-sky-900 border-sky-300',
+          cardClass: 'bg-sky-50 border-sky-200',
+          continueLabel: 'Continue The Arc',
+        };
+      }
+
+      return {
+        headline: 'Track structure and pattern.',
+        detail: 'Use Continue, then open Study Map for cross references and covenant structure.',
+        chipClass: 'bg-violet-100 text-violet-900 border-violet-300',
+        cardClass: 'bg-violet-50 border-violet-200',
+        continueLabel: 'Continue With Structure',
+      };
+    }
+
+    if (activePersona === 'disoriented-reader') {
+      return {
+        headline: `Anchor in ${selectedStory.title}.`,
+        detail: 'Read the context block first, then scripture. Ignore extra panels unless you need them.',
+        chipClass: 'bg-amber-100 text-amber-900 border-amber-300',
+        cardClass: 'bg-amber-50 border-amber-200',
+        continueLabel: 'Continue One Step',
+      };
+    }
+
+    if (activePersona === 'visual-learner') {
+      return {
+        headline: `See where ${selectedStory.title} fits.`,
+        detail: 'Use the movement tags and graph view to connect this story to the wider narrative arc.',
+        chipClass: 'bg-sky-100 text-sky-900 border-sky-300',
+        cardClass: 'bg-sky-50 border-sky-200',
+        continueLabel: 'Continue The Arc',
+      };
+    }
+
+    return {
+      headline: `Analyze ${selectedStory.title} as a node.`,
+      detail: 'Compare covenant and thematic threads to see how this passage advances the framework.',
+      chipClass: 'bg-violet-100 text-violet-900 border-violet-300',
+      cardClass: 'bg-violet-50 border-violet-200',
+      continueLabel: 'Continue With Structure',
+    };
+  }, [activePersona, selectedStory]);
+
+  const focusStoryPanel = () => {
+    if (typeof window === 'undefined') return;
+    const focus = () => {
+      storyPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.requestAnimationFrame(focus);
+    window.setTimeout(focus, 80);
+    window.setTimeout(focus, 220);
+  };
+
+  useEffect(() => {
+    if (!selectedStory) return;
+    focusStoryPanel();
+  }, [selectedStory]);
+
   const openStory = (story: BibleStory) => {
     setShowAdvancedStudy(false);
     handleSelectStory(story);
@@ -303,7 +427,7 @@ export default function App() {
 
   const continueWithReinforcement = (story: BibleStory) => {
     const streakLabel = streakCount > 0 ? `${streakCount}-day streak` : 'first step today';
-    setReinforcementToast(`Nice consistency. ${streakLabel}.`);
+    setReinforcementToast(`Continuing at ${story.id.toString().padStart(2, '0')} ${story.title}. ${streakLabel}.`);
     openStory(story);
   };
 
@@ -393,14 +517,16 @@ export default function App() {
     }
   };
 
-  const handleSelectStory = (story: BibleStory) => {
+  const handleSelectStory = (story: BibleStory, scriptureReference?: string) => {
     setShowAdvancedStudy(false);
     setLastReadStoryId(story.id);
     setSelectedStory(story);
-    fetchBibleText(story.reference);
+    const referenceToRead = scriptureReference ?? story.reference;
+    setActiveReadingReference(referenceToRead);
+    fetchBibleText(referenceToRead);
     // On mobile, close sidebar after selection
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    focusStoryPanel();
   };
 
   const toggleComplete = (id: number) => {
@@ -486,6 +612,15 @@ export default function App() {
                   </button>
                 </div>
 
+                {/* Full Bible Mode Toggle */}
+                <FullBibleModeToggle 
+                  enabled={useFullBibleMode}
+                  onToggle={(enabled) => {
+                    setUseFullBibleMode(enabled);
+                    localStorage.setItem('bible-use-full-bible-mode', enabled ? 'true' : 'false');
+                  }}
+                />
+
                 <div className="space-y-3">
                   <div className="section-label mb-1">BROWSE</div>
                   <div className="text-sm text-ink/60 leading-relaxed">
@@ -549,58 +684,113 @@ export default function App() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-8 scroll-smooth no-scrollbar">
-                  {categories.map(category => {
-                    const storiesInCat = filteredStories.filter(s => s.category === category);
-                    if (storiesInCat.length === 0) return null;
-                    
-                    return (
-                      <div key={category} className="space-y-4">
-                        <div className="section-label px-2">{category}</div>
-                        <div className="flex flex-col gap-2">
-                          {storiesInCat.map(story => (
-                            <button
-                              key={story.id}
-                              onClick={() => handleSelectStory(story)}
-                              className={`w-full text-left px-4 py-4 rounded-lg transition-all flex items-center justify-between group ${
-                                selectedStory?.id === story.id 
-                                  ? 'bg-paper soft-shadow' 
-                                  : 'hover:bg-paper/50 text-ink/80'
-                              }`}
-                            >
-                              <div className="flex flex-col gap-0.5">
-                                <span className={`text-base font-serif font-medium leading-tight ${selectedStory?.id === story.id ? 'text-olive' : ''}`}>
-                                  {story.title}
-                                </span>
-                                <span className="text-[10px] uppercase tracking-wider font-bold text-clay opacity-70">
-                                  {story.reference}
-                                </span>
-                                <span className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink/45 hidden sm:inline">
-                                  {storyIndex.get(story.id)?.narrative.movement.shortLabel}
-                                </span>
-                                {!guidedMode && (
-                                  <span className="mt-1 flex flex-wrap gap-1">
-                                    {getStoryThemes(story.id).slice(0, 1).map(thread => (
-                                      <span key={thread.id} className="rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-widest" style={{ backgroundColor: `${thread.accent}18`, color: thread.accent }}>
-                                        {thread.title}
+                  {useFullBibleMode ? (
+                    (Object.entries(fullBibleByAct) as Array<[string, typeof chronologicalPath]>).map(([actNum, chapters]) => {
+                      const actId = parseInt(actNum) as ActId;
+                      const act = acts[actId];
+                      if (!act || chapters.length === 0) return null;
+
+                      return (
+                        <div key={actNum} className="space-y-4">
+                          <div className="section-label px-2 flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: ['#b45309', '#ea580c', '#dc2626', '#e11d48', '#be185d', '#7e22ce', '#4f46e5', '#0284c7'][actId - 1] }} />
+                            {act.title}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {chapters.map(chapter => (
+                              <button
+                                key={chapter.id}
+                                onClick={() => {
+                                  const storyId = getStoryIdForChapter(chapter.id);
+                                  if (!storyId) return;
+                                  const story = bibleStories[storyId - 1];
+                                  if (!story) return;
+                                  handleSelectStory(story, chapter.reference);
+                                }}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center justify-between group ${
+                                  activeReadingReference === chapter.reference
+                                    ? 'bg-paper soft-shadow'
+                                    : 'hover:bg-paper/50 text-ink/80'
+                                }`}
+                              >
+                                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-serif font-medium leading-tight truncate ${activeReadingReference === chapter.reference ? 'text-olive' : ''}`}>
+                                      {chapter.title}
+                                    </span>
+                                    {chapter.isMilestone && (
+                                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-olive/10 text-olive whitespace-nowrap">
+                                        STORY
                                       </span>
-                                    ))}
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] uppercase tracking-wider font-bold text-clay opacity-70">
+                                    {chapter.reference}
                                   </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {completedStories.includes(story.id) && (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-olive" />
-                                )}
-                                <span className="text-xs font-mono opacity-30 group-hover:opacity-60 transition-opacity">
-                                  {story.id.toString().padStart(2, '0')}
+                                </div>
+                                <span className="text-xs font-mono opacity-30 group-hover:opacity-60 transition-opacity ml-2">
+                                  {chapter.id}
                                 </span>
-                              </div>
-                            </button>
-                          ))}
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    categories.map(category => {
+                      const storiesInCat = filteredStories.filter(s => s.category === category);
+                      if (storiesInCat.length === 0) return null;
+                      
+                      return (
+                        <div key={category} className="space-y-4">
+                          <div className="section-label px-2">{category}</div>
+                          <div className="flex flex-col gap-2">
+                            {storiesInCat.map(story => (
+                              <button
+                                key={story.id}
+                                onClick={() => handleSelectStory(story)}
+                                className={`w-full text-left px-4 py-4 rounded-lg transition-all flex items-center justify-between group ${
+                                  selectedStory?.id === story.id 
+                                    ? 'bg-paper soft-shadow' 
+                                    : 'hover:bg-paper/50 text-ink/80'
+                                }`}
+                              >
+                                <div className="flex flex-col gap-0.5">
+                                  <span className={`text-base font-serif font-medium leading-tight ${selectedStory?.id === story.id ? 'text-olive' : ''}`}>
+                                    {story.title}
+                                  </span>
+                                  <span className="text-[10px] uppercase tracking-wider font-bold text-clay opacity-70">
+                                    {story.reference}
+                                  </span>
+                                  <span className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink/45 hidden sm:inline">
+                                    {storyIndex.get(story.id)?.narrative.movement.shortLabel}
+                                  </span>
+                                  {!guidedMode && (
+                                    <span className="mt-1 flex flex-wrap gap-1">
+                                      {getStoryThemes(story.id).slice(0, 1).map(thread => (
+                                        <span key={thread.id} className="rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-widest" style={{ backgroundColor: `${thread.accent}18`, color: thread.accent }}>
+                                          {thread.title}
+                                        </span>
+                                      ))}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {completedStories.includes(story.id) && (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-olive" />
+                                  )}
+                                  <span className="text-xs font-mono opacity-30 group-hover:opacity-60 transition-opacity">
+                                    {story.id.toString().padStart(2, '0')}
+                                  </span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
                 
                 <div className="pt-6 border-t border-ink/5">
@@ -625,10 +815,10 @@ export default function App() {
             <section className="lg:hidden sticky top-0 z-20 bg-bg-warm/95 backdrop-blur supports-[backdrop-filter]:bg-bg-warm/80 border border-ink/5 rounded-2xl p-3">
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => openStory(resumeStory)}
+                  onClick={() => continueWithReinforcement(resumeStory)}
                   className="px-3 py-3 rounded-xl bg-olive text-bg-warm text-[11px] font-bold uppercase tracking-widest"
                 >
-                  Continue
+                  {personaLiveGuidance.continueLabel}
                 </button>
                 <button
                   onClick={() => setIsSidebarOpen(true)}
@@ -683,12 +873,12 @@ export default function App() {
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <button onClick={() => openStory(bibleStories[0])} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
+                <button onClick={() => handleSelectStory(bibleStories[0], bibleStories[0].reference)} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
                   <div className="text-[10px] uppercase tracking-widest font-bold text-clay mb-2">Begin here</div>
                   <div className="font-serif text-2xl text-olive">Creation</div>
                   <div className="text-xs text-ink/60 mt-1">Open the first story and follow the narrative spine.</div>
                 </button>
-                <button onClick={() => openStory(resumeStory)} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
+                <button onClick={() => continueWithReinforcement(resumeStory)} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
                   <div className="text-[10px] uppercase tracking-widest font-bold text-clay mb-2">Resume</div>
                   <div className="font-serif text-2xl text-olive">{lastReadStoryId ? 'Last Read' : 'Next Story'}</div>
                   <div className="text-xs text-ink/60 mt-1">Continue from {resumeStory.id.toString().padStart(2, '0')} {resumeStory.title}.</div>
@@ -716,12 +906,15 @@ export default function App() {
                   <div className="text-[10px] uppercase tracking-widest text-clay font-bold mb-2">Daily Reflection Prompt</div>
                   <p className="font-serif text-xl text-olive leading-relaxed">{todayPrompt}</p>
                   <div className="mt-3 text-xs text-ink/60">Recommended story: {resumeStory.id.toString().padStart(2, '0')} {resumeStory.title}</div>
+                  <div className={`mt-3 inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest border ${personaLiveGuidance.chipClass}`}>
+                    Persona Lens: {activePersonaProfile.label}
+                  </div>
                 </div>
                 <button
-                  onClick={() => openStory(resumeStory)}
+                  onClick={() => continueWithReinforcement(resumeStory)}
                   className="h-full px-5 py-4 rounded-2xl bg-olive text-bg-warm text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
                 >
-                  Continue Today
+                  {personaLiveGuidance.continueLabel}
                 </button>
               </div>
               <button
@@ -796,7 +989,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <div className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 space-y-2">
+                <div className={`rounded-2xl border p-4 space-y-2 ${personaLiveGuidance.cardClass}`}>
                   <div className="text-sm font-bold uppercase tracking-widest text-clay">{activePersonaProfile.label}</div>
                   <div className="font-serif text-xl text-olive">{activePersonaProfile.description}</div>
                   <div className="text-sm text-ink/65 leading-relaxed">{activePersonaProfile.need}</div>
@@ -924,29 +1117,15 @@ export default function App() {
                   className="space-y-12 pb-20"
                 >
                   {/* Story Card */}
-                  <article className="bg-paper p-8 lg:p-12 rounded-[32px] card-shadow relative overflow-hidden">
+                  <article ref={storyPanelRef} className="bg-paper p-8 lg:p-12 rounded-[32px] card-shadow relative overflow-hidden">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       <div className="story-meta">Story {selectedStory.id === 100 ? 'One Hundred' : `No. ${selectedStory.id}`}</div>
                       {/* Act Badge */}
-                      {selectedStory && (() => {
-                        let actId: ActId = 1;
-                        if (selectedStory.id <= 5) actId = 1;
-                        else if (selectedStory.id <= 15) actId = 2;
-                        else if (selectedStory.id <= 25) actId = 3;
-                        else if (selectedStory.id <= 35) actId = 4;
-                        else if (selectedStory.id <= 45) actId = 5;
-                        else if (selectedStory.id <= 55) actId = 6;
-                        else if (selectedStory.id <= 65) actId = 7;
-                        else actId = 8;
-                        
-                        const act = acts[actId];
-                        const actColors = ['bg-amber-100 text-amber-900', 'bg-orange-100 text-orange-900', 'bg-red-100 text-red-900', 'bg-rose-100 text-rose-900', 'bg-pink-100 text-pink-900', 'bg-purple-100 text-purple-900', 'bg-indigo-100 text-indigo-900', 'bg-blue-100 text-blue-900'];
-                        return (
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${actColors[actId - 1]}`}>
-                            Act {actId}: {act.title}
-                          </span>
-                        );
-                      })()}
+                      {selectedActId && selectedStoryAct && (
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${['bg-amber-100 text-amber-900', 'bg-orange-100 text-orange-900', 'bg-red-100 text-red-900', 'bg-rose-100 text-rose-900', 'bg-pink-100 text-pink-900', 'bg-purple-100 text-purple-900', 'bg-indigo-100 text-indigo-900', 'bg-blue-100 text-blue-900'][selectedActId - 1]}`}>
+                          Act {selectedActId}: {selectedStoryAct.title}
+                        </span>
+                      )}
                       {selectedMovement && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-bg-warm text-olive">{selectedMovement.label}</span>}
                       {!guidedMode && selectedCovenant && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-sand text-clay">{selectedCovenant.label}</span>}
                       {!guidedMode && selectedThemes.slice(0, 2).map(theme => (
@@ -960,7 +1139,7 @@ export default function App() {
                         {selectedStory.title}
                       </h1>
                       <div className="flex flex-wrap items-center gap-4">
-                        <div className="scripture-ref">{selectedStory.reference}</div>
+                        <div className="scripture-ref">{activeReadingReference || selectedStory.reference}</div>
                         <button 
                           onClick={() => toggleComplete(selectedStory.id)}
                           className={`flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all border ${
@@ -1022,6 +1201,12 @@ export default function App() {
                         <div className="text-ink/80 leading-relaxed font-serif text-lg lg:text-xl italic whitespace-pre-wrap">
                           {selectedStory.context}
                         </div>
+                      </div>
+
+                      <div className={`p-5 rounded-2xl border ${personaLiveGuidance.cardClass}`}>
+                        <div className="section-label mb-1">PERSONA LENS</div>
+                        <div className="font-serif text-2xl text-olive mb-2">{personaLiveGuidance.headline}</div>
+                        <div className="text-sm text-ink/70 leading-relaxed">{personaLiveGuidance.detail}</div>
                       </div>
 
                       {!showAdvancedStudy && (
@@ -1145,7 +1330,10 @@ export default function App() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="section-label">THE SCRIPTURE</div>
-                            <WhereIsJesus context={getJesusContextForChapter(selectedStory.id)} reference={selectedStory.reference} />
+                            <WhereIsJesus
+                              context={getJesusContextForChapter(activeReadingChapter?.id ?? selectedMilestoneChapter?.id ?? selectedActFallbackChapterId ?? selectedStory.id)}
+                              reference={activeReadingReference || selectedStory.reference}
+                            />
                           </div>
                           <div className="flex gap-2">
                             <button className="p-2.5 bg-bg-warm hover:bg-sand rounded-full text-clay transition-all" aria-label="Play audio" title="Play audio">
@@ -1179,13 +1367,13 @@ export default function App() {
                                 <div className="text-sm text-ink/70 leading-relaxed">{scriptureError}</div>
                                 <div className="flex flex-wrap gap-2">
                                   <button
-                                    onClick={() => selectedStory && fetchBibleText(selectedStory.reference, true)}
+                                    onClick={() => fetchBibleText(activeReadingReference || selectedStory.reference, true)}
                                     className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-olive text-bg-warm text-[10px] font-bold uppercase tracking-widest"
                                   >
                                     <RotateCcw className="w-3.5 h-3.5" /> Retry
                                   </button>
                                   <a
-                                    href={`https://www.biblegateway.com/passage/?search=${encodeURIComponent(lastRequestedRef || selectedStory.reference)}&version=KJV`}
+                                    href={`https://www.biblegateway.com/passage/?search=${encodeURIComponent(lastRequestedRef || activeReadingReference || selectedStory.reference)}&version=KJV`}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-ink/10 text-olive text-[10px] font-bold uppercase tracking-widest"
@@ -1203,16 +1391,7 @@ export default function App() {
                       {showSupplementalSections && selectedStory && (
                         <DeepDivePanel 
                           storyId={selectedStory.id}
-                          storyAct={(() => {
-                            if (selectedStory.id <= 5) return 1;
-                            if (selectedStory.id <= 15) return 2;
-                            if (selectedStory.id <= 25) return 3;
-                            if (selectedStory.id <= 35) return 4;
-                            if (selectedStory.id <= 45) return 5;
-                            if (selectedStory.id <= 55) return 6;
-                            if (selectedStory.id <= 75) return 7;
-                            return 8;
-                          })()}
+                          storyAct={selectedActId ?? 1}
                           visible={true}
                         />
                       )}

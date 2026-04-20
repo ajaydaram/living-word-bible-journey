@@ -11,7 +11,7 @@ An interactive, mobile-friendly Bible study web app that guides users through 10
 
 ### What
 - A React + Vite web app with a curated 100-story Bible journey.
-- Includes guided reading mode, thematic exploration, related-story graph, and progress tracking.
+- Includes guided reading mode, thematic exploration, related-story graph, progress tracking, and Full Bible chapter browsing by Act.
 - Provides scripture text lookup from Bible API with retry and fallback links.
 
 ### When
@@ -36,11 +36,13 @@ An interactive, mobile-friendly Bible study web app that guides users through 10
 ## Core Features
 
 - 100-story canonical journey with quick navigation.
+- Full Bible Mode with all chapters grouped by 8 Acts and linked back to story context.
 - Guided (simple) vs exploratory study experience.
 - Last-read resume and recommended next action.
 - Mobile dashboard expand/collapse for reduced cognitive load.
 - Narrative movement, covenant context, and persona-aware framing.
 - Related-story graph and thematic thread exploration.
+- Optional Deep Dive supplemental chapter panels (genealogies, laws, and contextual material).
 - Daily prompt, streak tracking, and session summary reinforcement.
 - Scripture fetch retry + external fallback link.
 - PWA support via generated service worker.
@@ -80,6 +82,7 @@ The app starts on port 3000 by default; Vite will auto-select the next available
 
 ```bash
 npm run lint
+npm run test
 npm run build
 ```
 
@@ -124,10 +127,18 @@ Expected result:
 ├── public/
 ├── src/
 │   ├── App.tsx
+│   ├── components/
+│   │   ├── CovenantTracker.tsx
+│   │   ├── DeepDivePanel.tsx
+│   │   ├── FullBibleModeToggle.tsx
+│   │   ├── TimelineVisualizer.tsx
+│   │   └── WhereIsJesus.tsx
 │   ├── index.css
 │   ├── main.tsx
 │   └── data/
 │       ├── bibleStories.ts
+│       ├── chronologicalPath.ts
+│       ├── chronologicalPath.test.ts
 │       └── unifiedFramework.ts
 ├── index.html
 ├── package.json

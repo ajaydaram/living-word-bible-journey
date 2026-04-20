@@ -3,6 +3,8 @@
  * Maps all 1,189 Bible chapters into a unified redemptive narrative
  */
 
+import { bibleStories } from './bibleStories';
+
 export interface BiblicalReference {
   book: string;
   chapter: number;
@@ -432,7 +434,61 @@ export function getChaptersForAct(actId: ActId): ChapterEntry[] {
 
 // Helper function: get all milestones
 export function getMilestones(): ChapterEntry[] {
-  return chronologicalPath.filter(ch => ch.isMilestone);
+  return chronologicalPath
+    .filter(ch => ch.isMilestone)
+    .sort((a, b) => a.id - b.id);
+}
+
+const milestoneToStoryIdMap: Record<number, number> = {
+  1: 1,
+  2: 2,
+  4: 3,
+  5: 4,
+  6: 5,
+  7: 6,
+  8: 7,
+  9: 8,
+  10: 9,
+  51: 16,
+  52: 17,
+  53: 18,
+  54: 19,
+  55: 20,
+  1100: 53,
+  1101: 55,
+  1102: 56,
+  1150: 71,
+  1151: 100,
+};
+
+/**
+ * Get milestone chapter for a 1-based story id from the 100-story journey.
+ */
+export function getMilestoneForStory(storyId: number): ChapterEntry | null {
+  if (storyId < 1) return null;
+  if (!bibleStories.some(item => item.id === storyId)) return null;
+
+  const milestoneId = Number(
+    Object.entries(milestoneToStoryIdMap).find(([, mappedStoryId]) => mappedStoryId === storyId)?.[0]
+  );
+
+  if (!milestoneId) return null;
+  return chronologicalPath.find(chapter => chapter.id === milestoneId) ?? null;
+}
+
+/**
+ * Map any chapter id to the nearest story id at or before that chapter.
+ */
+export function getStoryIdForChapter(chapterId: number): number | null {
+  if (chapterId < 1) return null;
+
+  const milestones = getMilestones();
+  for (let i = milestones.length - 1; i >= 0; i -= 1) {
+    if (milestones[i].id <= chapterId) {
+      return milestoneToStoryIdMap[milestones[i].id] ?? null;
+    }
+  }
+  return null;
 }
 
 // Helper function: get "Where is Jesus?" context for any chapter
@@ -462,22 +518,19 @@ export function getJesusContextForChapter(chapterId: number): string {
  * These are genealogies, laws, and other foundational material
  */
 export function getSupplementalChaptersForStory(storyId: number): ChapterEntry[] {
-  // Find the current story's chapters
-  const storyChapters = chronologicalPath.filter(ch => ch.isMilestone && ch.id <= storyId);
-  if (storyChapters.length === 0) return [];
-  
-  const lastStory = storyChapters[storyChapters.length - 1];
-  const currentAct = lastStory.act;
-  
-  // Get all supplemental chapters for the same act that come after this story but before the next narrative milestone
-  const nextMilestone = chronologicalPath.find(ch => ch.isMilestone && ch.id > lastStory.id && ch.act === currentAct);
-  const nextStoryId = nextMilestone?.id || Infinity;
-  
+  const milestone = getMilestoneForStory(storyId);
+  if (!milestone) return [];
+
+  const nextMilestone = chronologicalPath.find(
+    ch => ch.isMilestone && ch.id > milestone.id && ch.act === milestone.act
+  );
+  const nextStoryId = nextMilestone?.id ?? Infinity;
+
   return chronologicalPath.filter(ch => 
     !ch.isMilestone && 
     !ch.isNarrative && 
-    ch.act === currentAct && 
-    ch.id > lastStory.id && 
+    ch.act === milestone.act && 
+    ch.id > milestone.id && 
     ch.id < nextStoryId
   );
 }
