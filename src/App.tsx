@@ -525,6 +525,7 @@ export default function App() {
 
   const handleSelectStory = (story: BibleStory, scriptureReference?: string) => {
     setShowAdvancedStudy(false);
+    setReinforcementToast(`Opening ${story.id.toString().padStart(2, '0')} ${story.title}.`);
     setLastReadStoryId(story.id);
     setSelectedStory(story);
     const referenceToRead = scriptureReference ?? story.reference;
@@ -558,6 +559,35 @@ export default function App() {
     });
   };
 
+  const handleGuidedModeToggle = () => {
+    const nextGuidedMode = !guidedMode;
+    setGuidedMode(nextGuidedMode);
+    setReinforcementToast(nextGuidedMode ? 'Simple View on. Story guidance is front and center.' : 'Study View on. Extra tools are now visible.');
+  };
+
+  const handleFullBibleModeToggle = (enabled: boolean) => {
+    setUseFullBibleMode(enabled);
+    localStorage.setItem('bible-use-full-bible-mode', enabled ? 'true' : 'false');
+    if (enabled) {
+      setIsSidebarOpen(true);
+    }
+    setReinforcementToast(
+      enabled
+        ? 'Full Bible Mode on. Chapters are grouped by Act in the sidebar.'
+        : 'Focused Path on. Returning to the 100-story journey.'
+    );
+  };
+
+  const handleOpenTools = () => {
+    setGuidedMode(false);
+    setShowAdvancedStudy(true);
+    setReinforcementToast('Opening study tools. The graph, threads, and covenant context are now active.');
+  };
+
+  const handleBeginHere = () => {
+    handleSelectStory(bibleStories[0], bibleStories[0].reference);
+  };
+
   const progressPercentage = Math.round((completedStories.length / bibleStories.length) * 100);
 
   return (
@@ -588,17 +618,27 @@ export default function App() {
             </button>
           )}
           <button
-            onClick={() => setGuidedMode(prev => !prev)}
+            onClick={handleGuidedModeToggle}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-ink/10 bg-paper text-[11px] font-bold uppercase tracking-widest text-olive transition-all hover:border-olive/30"
           >
             {guidedMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             {guidedMode ? 'Simple View' : 'Explore View'}
           </button>
           <div className="text-[13px] text-clay font-bold tracking-widest uppercase">
-            {selectedStory ? `STORY ${selectedStory.id} OF 100` : 'SELECT A STORY'} • {progressPercentage}% JOURNEY COMPLETED
+            {useFullBibleMode ? 'FULL BIBLE MODE • SELECT A CHAPTER' : selectedStory ? `STORY ${selectedStory.id} OF 100` : 'SELECT A STORY'} • {progressPercentage}% JOURNEY COMPLETED
           </div>
         </div>
       </header>
+
+      {useFullBibleMode && (
+        <div className="px-6 lg:px-12 pt-4 shrink-0">
+          <div className="rounded-2xl border border-indigo-200/70 bg-indigo-50/80 px-4 py-3 text-indigo-950 shadow-sm">
+            <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-700 mb-1">Full Bible Mode Active</div>
+            <div className="font-serif text-lg leading-tight">The sidebar now lists chapters by Act, not just the 100-story path.</div>
+            <div className="text-sm text-indigo-800/80 mt-1 leading-relaxed">Open the chapter browser and tap a milestone chapter to jump into the matching reading panel.</div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar Navigation */}
@@ -621,10 +661,7 @@ export default function App() {
                 {/* Full Bible Mode Toggle */}
                 <FullBibleModeToggle 
                   enabled={useFullBibleMode}
-                  onToggle={(enabled) => {
-                    setUseFullBibleMode(enabled);
-                    localStorage.setItem('bible-use-full-bible-mode', enabled ? 'true' : 'false');
-                  }}
+                  onToggle={handleFullBibleModeToggle}
                 />
 
                 <div className="space-y-3">
@@ -883,7 +920,7 @@ export default function App() {
                   <div className="text-xs text-ink/65 mt-1">After that, use Continue each day.</div>
                 </div>
                 <button
-                  onClick={() => handleSelectStory(bibleStories[0], bibleStories[0].reference)}
+                  onClick={handleBeginHere}
                   className="w-full px-4 py-4 rounded-2xl bg-olive text-bg-warm text-xs font-bold uppercase tracking-widest"
                 >
                   Start Reading (Creation)
@@ -903,11 +940,13 @@ export default function App() {
                 <div className="section-label">QUICK START</div>
                 <h2 className="text-3xl lg:text-4xl font-serif text-olive leading-tight mt-1 mb-3">Start with a clear path instead of a blank page.</h2>
                 <p className="text-ink/65 leading-relaxed max-w-2xl">
-                  Simple view hides the advanced study layers until you need them. Use one of the buttons below to begin with the beginning, resume your current place, or move into the deeper tools later.
+                  {guidedMode
+                    ? 'Simple view hides the advanced study layers until you need them. Use one of the buttons below to begin with the beginning, resume your current place, or move into the deeper tools later.'
+                    : 'Explore view keeps the deeper tools visible so you can move between the story, graph, and chapter browser without losing your place.'}
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <button onClick={() => handleSelectStory(bibleStories[0], bibleStories[0].reference)} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
+                <button onClick={handleBeginHere} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
                   <div className="text-[10px] uppercase tracking-widest font-bold text-clay mb-2">Begin here</div>
                   <div className="font-serif text-2xl text-olive">Creation</div>
                   <div className="text-xs text-ink/60 mt-1">Open the first story and follow the narrative spine.</div>
@@ -917,7 +956,7 @@ export default function App() {
                   <div className="font-serif text-2xl text-olive">{lastReadStoryId ? 'Last Read' : 'Next Story'}</div>
                   <div className="text-xs text-ink/60 mt-1">Continue from {resumeStory.id.toString().padStart(2, '0')} {resumeStory.title}.</div>
                 </button>
-                <button onClick={() => { setGuidedMode(false); setShowAdvancedStudy(true); }} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
+                <button onClick={handleOpenTools} className="rounded-2xl border border-ink/5 bg-bg-warm/70 p-4 text-left hover:border-olive/30 transition-all">
                   <div className="text-[10px] uppercase tracking-widest font-bold text-clay mb-2">Deeper study</div>
                   <div className="font-serif text-2xl text-olive">Open tools</div>
                   <div className="text-xs text-ink/60 mt-1">Reveal threads, graphs, and advanced filters.</div>
