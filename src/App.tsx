@@ -430,7 +430,6 @@ export default function App() {
   }, [selectedStory]);
 
   const openStory = (story: BibleStory) => {
-    setShowAdvancedStudy(false);
     handleSelectStory(story);
   };
 
@@ -531,7 +530,6 @@ export default function App() {
   };
 
   const handleSelectStory = (story: BibleStory, scriptureReference?: string) => {
-    setShowAdvancedStudy(false);
     setReinforcementToast(`Opening ${story.id.toString().padStart(2, '0')} ${story.title}.`);
     setLastReadStoryId(story.id);
     setSelectedStory(story);
@@ -569,6 +567,7 @@ export default function App() {
   const handleGuidedModeToggle = () => {
     const nextGuidedMode = !guidedMode;
     setGuidedMode(nextGuidedMode);
+    setShowAdvancedStudy(!nextGuidedMode && !!selectedStory);
     setReinforcementToast(nextGuidedMode ? 'Simple View on. Story guidance is front and center.' : 'Study View on. Extra tools are now visible.');
   };
 
