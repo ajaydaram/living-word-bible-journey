@@ -591,9 +591,11 @@ export default function App() {
   const progressPercentage = Math.round((completedStories.length / bibleStories.length) * 100);
 
   return (
-    <div className="flex flex-col h-screen bg-bg-warm overflow-hidden">
+    <div className="relative flex min-h-screen flex-col overflow-hidden text-ink">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_34%),radial-gradient(circle_at_top_right,rgba(166,124,82,0.12),transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/60 to-transparent" />
       {/* Header */}
-      <header className="px-6 lg:px-12 py-6 border-bottom border-ink/5 flex flex-col sm:flex-row justify-between items-baseline gap-4 bg-bg-warm shrink-0">
+      <header className="sticky top-4 z-50 mx-4 sm:mx-6 lg:mx-8 mt-4 editorial-shell px-5 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-baseline gap-4 shrink-0 rounded-[28px]">
         <div className="flex items-center gap-4">
           {!isSidebarOpen && (
             <button 
@@ -631,8 +633,8 @@ export default function App() {
       </header>
 
       {useFullBibleMode && (
-        <div className="px-6 lg:px-12 pt-4 shrink-0">
-          <div className="rounded-2xl border border-indigo-200/70 bg-indigo-50/80 px-4 py-3 text-indigo-950 shadow-sm">
+        <div className="mx-4 sm:mx-6 lg:mx-8 pt-4 shrink-0">
+          <div className="editorial-quiet rounded-[24px] px-4 py-3 text-indigo-950 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-700 mb-1">Full Bible Mode Active</div>
             <div className="font-serif text-lg leading-tight">The sidebar now lists chapters by Act, not just the 100-story path.</div>
             <div className="text-sm text-indigo-800/80 mt-1 leading-relaxed">Open the chapter browser and tap a milestone chapter to jump into the matching reading panel.</div>
@@ -640,7 +642,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="relative flex flex-1 overflow-hidden px-4 sm:px-6 lg:px-8 pb-4 pt-4">
         {/* Sidebar Navigation */}
         <AnimatePresence>
           {isSidebarOpen && (
@@ -648,9 +650,9 @@ export default function App() {
               initial={{ x: -320 }}
               animate={{ x: 0 }}
               exit={{ x: -320 }}
-              className="w-full lg:w-[320px] bg-sand border-r border-ink/5 flex flex-col h-full z-50 absolute lg:relative"
+              className="w-full lg:w-[340px] editorial-shell flex flex-col h-full z-50 absolute lg:relative rounded-[30px] overflow-hidden"
             >
-              <div className="p-8 space-y-8 flex flex-col h-full">
+              <div className="p-6 sm:p-7 space-y-7 flex flex-col h-full">
                 <div className="flex items-center justify-between">
                   <div className="section-label">CHAPTER OVERVIEW</div>
                   <button onClick={() => setIsSidebarOpen(false)} aria-label="Close story browser" title="Close story browser" className="lg:hidden p-2 hover:bg-bg-warm rounded-full">
@@ -853,7 +855,7 @@ export default function App() {
         </AnimatePresence>
 
         {/* Main Content View */}
-        <main className="flex-1 flex flex-col h-full bg-bg-warm overflow-y-auto">
+        <main className="flex-1 flex flex-col h-full bg-transparent overflow-y-auto">
           <div className={`max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-12 ${isMobileReading ? 'py-4 space-y-4' : 'py-8 sm:py-10 lg:py-16 space-y-8 sm:space-y-10 lg:space-y-12'}`}>
             <section className="lg:hidden sticky top-0 z-20 bg-bg-warm/95 backdrop-blur supports-[backdrop-filter]:bg-bg-warm/80 border border-ink/5 rounded-2xl p-3">
               <div className="grid grid-cols-2 gap-2">
@@ -872,7 +874,7 @@ export default function App() {
               </div>
             </section>
             {!shouldSimplifyLanding && !onboardingDismissed && (
-              <section className="bg-paper p-4 sm:p-6 lg:p-7 rounded-[24px] card-shadow border border-ink/5">
+              <section className="editorial-shell p-4 sm:p-6 lg:p-7 rounded-[28px]">
                 <div className="section-label">GET ORIENTED</div>
                 <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                   <div>
@@ -908,7 +910,7 @@ export default function App() {
             )}
 
             {shouldSimplifyLanding && (
-              <section className="bg-paper p-5 rounded-[24px] card-shadow border border-ink/5 space-y-4">
+              <section className="editorial-shell p-5 rounded-[28px] space-y-4">
                 <div>
                   <div className="section-label">START HERE</div>
                   <h2 className="text-3xl font-serif text-olive leading-tight mt-1">One simple path for today.</h2>
@@ -935,7 +937,7 @@ export default function App() {
             )}
 
             {!shouldSimplifyLanding && (
-            <section className="bg-paper p-4 sm:p-6 lg:p-8 rounded-[28px] card-shadow border border-ink/5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr] items-start">
+            <section className="editorial-shell p-4 sm:p-6 lg:p-8 rounded-[30px] grid gap-4 lg:grid-cols-[1.2fr_0.8fr] items-start">
               <div>
                 <div className="section-label">QUICK START</div>
                 <h2 className="text-3xl lg:text-4xl font-serif text-olive leading-tight mt-1 mb-3">Start with a clear path instead of a blank page.</h2>
@@ -966,7 +968,7 @@ export default function App() {
             )}
 
             {!shouldSimplifyLanding && (
-            <section className="bg-paper p-4 sm:p-6 lg:p-8 rounded-[24px] card-shadow border border-ink/5 grid gap-4 lg:grid-cols-[0.75fr_1.25fr] items-start">
+            <section className="editorial-shell p-4 sm:p-6 lg:p-8 rounded-[28px] grid gap-4 lg:grid-cols-[0.75fr_1.25fr] items-start">
               <div>
                 <div className="section-label">TODAY</div>
                 <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-bg-warm text-clay text-[10px] font-bold uppercase tracking-widest mb-3">
@@ -1031,7 +1033,7 @@ export default function App() {
 
             {showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-              <div className="bg-paper p-6 lg:p-8 rounded-[28px] card-shadow overflow-hidden relative">
+              <div className="editorial-shell p-6 lg:p-8 rounded-[30px] overflow-hidden relative">
                 <div className="flex items-center gap-3 mb-4 text-clay">
                   <Layers3 className="w-4 h-4" />
                   <div className="section-label mb-0">UNIFIED MESSAGE</div>
@@ -1053,7 +1055,7 @@ export default function App() {
                   ))}
                 </div>
               </div>
-              <div className="bg-paper p-6 lg:p-8 rounded-[28px] card-shadow space-y-4">
+              <div className="editorial-shell p-6 lg:p-8 rounded-[30px] space-y-4">
                 <div className="flex items-center gap-3">
                   <Compass className="w-4 h-4 text-clay" />
                   <div className="section-label mb-0">PERSONA FOCUS</div>
@@ -1138,7 +1140,7 @@ export default function App() {
 
             <section className="grid gap-4 lg:grid-cols-3">
               {readingPlans.map(plan => (
-                <div key={plan.title} className="bg-paper p-6 rounded-[24px] card-shadow border border-ink/5">
+                <div key={plan.title} className="editorial-shell p-6 rounded-[28px]">
                   <div className="section-label">THEMATIC PATH</div>
                   <div className="font-serif text-3xl text-olive mt-1 mb-2">{plan.title}</div>
                   <div className="text-sm italic text-clay mb-3">{plan.theme}</div>
@@ -1193,7 +1195,7 @@ export default function App() {
                   className="space-y-12 pb-20"
                 >
                   {/* Story Card */}
-                  <article ref={storyPanelRef} className="bg-paper p-4 sm:p-6 lg:p-12 rounded-[24px] sm:rounded-[32px] card-shadow relative overflow-hidden">
+                  <article ref={storyPanelRef} className="editorial-shell p-4 sm:p-6 lg:p-12 rounded-[28px] sm:rounded-[36px] relative overflow-hidden">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       <div className="story-meta">Story {selectedStory.id === 100 ? 'One Hundred' : `No. ${selectedStory.id}`}</div>
                       {/* Act Badge */}
