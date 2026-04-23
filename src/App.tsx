@@ -118,6 +118,8 @@ export default function App() {
     return saved === 'true';
   });
 
+  type AppMode = 'start' | 'read' | 'study';
+
   const onboardingSteps = [
     {
       title: 'Step 1: Start with one story',
@@ -301,6 +303,11 @@ export default function App() {
   const showExpandedDashboard = isDesktopLayout || showDashboardDetails;
   const shouldSimplifyLanding = !selectedStory && !isDesktopLayout;
   const isMobileReading = !!selectedStory && !isDesktopLayout;
+  const appMode: AppMode = !selectedStory ? 'start' : (!guidedMode || showAdvancedStudy ? 'study' : 'read');
+  const isStartMode = appMode === 'start';
+  const isReadingMode = appMode === 'read';
+  const isStudyMode = appMode === 'study';
+  const showStudyExtras = isStudyMode;
   const todayPrompt = dailyPrompts[new Date().getDay() % dailyPrompts.length];
   const selectedIsCompleted = selectedStory ? completedStories.includes(selectedStory.id) : false;
   const suggestedNextStory = selectedStory
@@ -857,6 +864,7 @@ export default function App() {
         {/* Main Content View */}
         <main className="flex-1 flex flex-col h-full bg-transparent overflow-y-auto">
           <div className={`max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-12 ${isMobileReading ? 'py-4 space-y-4' : 'py-8 sm:py-10 lg:py-16 space-y-8 sm:space-y-10 lg:space-y-12'}`}>
+            {!isStartMode && (
             <section className="lg:hidden sticky top-0 z-20 bg-bg-warm/95 backdrop-blur supports-[backdrop-filter]:bg-bg-warm/80 border border-ink/5 rounded-2xl p-3">
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -873,7 +881,8 @@ export default function App() {
                 </button>
               </div>
             </section>
-            {!shouldSimplifyLanding && !onboardingDismissed && (
+            )}
+            {showStudyExtras && !shouldSimplifyLanding && !onboardingDismissed && (
               <section className="editorial-shell p-4 sm:p-6 lg:p-7 rounded-[28px]">
                 <div className="section-label">GET ORIENTED</div>
                 <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
@@ -909,34 +918,7 @@ export default function App() {
               </section>
             )}
 
-            {shouldSimplifyLanding && (
-              <section className="editorial-shell p-5 rounded-[28px] space-y-4">
-                <div>
-                  <div className="section-label">START HERE</div>
-                  <h2 className="text-3xl font-serif text-olive leading-tight mt-1">One simple path for today.</h2>
-                  <p className="text-sm text-ink/65 mt-2 leading-relaxed">Start with one story only. We will open Creation and take you to the reading panel directly.</p>
-                </div>
-                <div className="rounded-2xl border border-ink/10 bg-bg-warm/70 p-4">
-                  <div className="text-[10px] uppercase tracking-widest font-bold text-clay mb-2">Step 1</div>
-                  <div className="font-serif text-xl text-olive">Tap Start Reading (Creation)</div>
-                  <div className="text-xs text-ink/65 mt-1">After that, use Continue each day.</div>
-                </div>
-                <button
-                  onClick={handleBeginHere}
-                  className="w-full px-4 py-4 rounded-2xl bg-olive text-bg-warm text-xs font-bold uppercase tracking-widest"
-                >
-                  Start Reading (Creation)
-                </button>
-                <button
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="w-full px-4 py-3 rounded-2xl border border-ink/10 bg-paper text-olive text-xs font-bold uppercase tracking-widest"
-                >
-                  Browse Stories Instead
-                </button>
-              </section>
-            )}
-
-            {!shouldSimplifyLanding && (
+            {showStudyExtras && !shouldSimplifyLanding && (
             <section className="editorial-shell p-4 sm:p-6 lg:p-8 rounded-[30px] grid gap-4 lg:grid-cols-[1.2fr_0.8fr] items-start">
               <div>
                 <div className="section-label">QUICK START</div>
@@ -967,7 +949,7 @@ export default function App() {
             </section>
             )}
 
-            {!shouldSimplifyLanding && (
+            {showStudyExtras && !shouldSimplifyLanding && (
             <section className="editorial-shell p-4 sm:p-6 lg:p-8 rounded-[28px] grid gap-4 lg:grid-cols-[0.75fr_1.25fr] items-start">
               <div>
                 <div className="section-label">TODAY</div>
@@ -1003,7 +985,7 @@ export default function App() {
             </section>
             )}
 
-            {showExpandedDashboard && !shouldSimplifyLanding && (
+            {showStudyExtras && showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div>
                 <TimelineVisualizer 
@@ -1020,7 +1002,7 @@ export default function App() {
             </section>
             )}
 
-            {showExpandedDashboard && !shouldSimplifyLanding && (
+            {showStudyExtras && showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div>
                 <CovenantTracker 
@@ -1031,7 +1013,7 @@ export default function App() {
             </section>
             )}
 
-            {showExpandedDashboard && !shouldSimplifyLanding && (
+            {showStudyExtras && showExpandedDashboard && !shouldSimplifyLanding && (
             <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <div className="editorial-shell p-6 lg:p-8 rounded-[30px] overflow-hidden relative">
                 <div className="flex items-center gap-3 mb-4 text-clay">
@@ -1168,9 +1150,9 @@ export default function App() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="bg-paper p-12 lg:p-20 rounded-[32px] text-center space-y-8 flex flex-col items-center card-shadow"
+                  className="editorial-shell p-8 sm:p-10 lg:p-16 rounded-[36px] text-center space-y-8 flex flex-col items-center"
                 >
-                  <div className="p-6 bg-sand rounded-full">
+                  <div className="p-5 bg-bg-warm/80 rounded-full border border-ink/5">
                     <BookOpen className="w-16 h-16 text-olive" />
                   </div>
                   <div className="space-y-4">
@@ -1179,12 +1161,20 @@ export default function App() {
                       Follow the ancient path from the first breath of creation to the new Jerusalem. One hundred stories, one living word.
                     </p>
                   </div>
-                  <button 
-                    onClick={() => handleSelectStory(bibleStories[0])}
-                    className="read-action mt-6 group"
-                  >
-                    Begin Your Study <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
+                    <button 
+                      onClick={handleBeginHere}
+                      className="rounded-2xl bg-olive px-5 py-4 text-bg-warm text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90"
+                    >
+                      Begin with Creation
+                    </button>
+                    <button 
+                      onClick={() => continueWithReinforcement(resumeStory)}
+                      className="rounded-2xl border border-ink/10 bg-paper px-5 py-4 text-olive text-xs font-bold uppercase tracking-widest transition-all hover:border-olive/30"
+                    >
+                      Resume {lastReadStoryId ? 'Last Read' : 'Next Story'}
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -1205,8 +1195,8 @@ export default function App() {
                         </span>
                       )}
                       {selectedMovement && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-bg-warm text-olive">{selectedMovement.label}</span>}
-                      {!guidedMode && selectedCovenant && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-sand text-clay">{selectedCovenant.label}</span>}
-                      {!guidedMode && selectedThemes.slice(0, 2).map(theme => (
+                      {showStudyExtras && selectedCovenant && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-sand text-clay">{selectedCovenant.label}</span>}
+                      {showStudyExtras && selectedThemes.slice(0, 2).map(theme => (
                         <span key={theme.id} className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ backgroundColor: `${theme.accent}18`, color: theme.accent }}>
                           {theme.title}
                         </span>
@@ -1232,25 +1222,27 @@ export default function App() {
                             'Mark as Completed'
                           )}
                         </button>
-                        <button
-                          onClick={() => setShowSupplementalSections(!showSupplementalSections)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all border ${
-                            showSupplementalSections
-                              ? 'bg-purple-100 text-purple-900 border-purple-300'
-                              : 'bg-bg-warm text-purple-700 border-purple-200 hover:border-purple-400'
-                          }`}
-                          title="Show supplemental chapters (genealogies, laws, etc.)"
-                        >
-                          {showSupplementalSections ? (
-                            <><Eye className="w-4 h-4" /> Deep Dive</>
-                          ) : (
-                            <><EyeOff className="w-4 h-4" /> Deep Dive</>
-                          )}
-                        </button>
+                        {showStudyExtras && (
+                          <button
+                            onClick={() => setShowSupplementalSections(!showSupplementalSections)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all border ${
+                              showSupplementalSections
+                                ? 'bg-purple-100 text-purple-900 border-purple-300'
+                                : 'bg-bg-warm text-purple-700 border-purple-200 hover:border-purple-400'
+                            }`}
+                            title="Show supplemental chapters (genealogies, laws, etc.)"
+                          >
+                            {showSupplementalSections ? (
+                              <><Eye className="w-4 h-4" /> Deep Dive</>
+                            ) : (
+                              <><EyeOff className="w-4 h-4" /> Deep Dive</>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </header>
 
-                    {selectedIsCompleted && (
+                    {selectedIsCompleted && showStudyExtras && (
                       <div className="mb-8 rounded-2xl border border-ink/5 bg-bg-warm/70 p-5 lg:p-6 grid gap-4 lg:grid-cols-[1fr_auto] items-start">
                         <div>
                           <div className="section-label mb-1">SESSION SUMMARY</div>
@@ -1281,13 +1273,15 @@ export default function App() {
                         </div>
                       </div>
 
+                      {showStudyExtras && (
                       <div className={`p-4 sm:p-5 rounded-2xl border ${personaLiveGuidance.cardClass}`}>
                         <div className="section-label mb-1">PERSONA LENS</div>
                         <div className="font-serif text-2xl text-olive mb-2">{personaLiveGuidance.headline}</div>
                         <div className="text-sm text-ink/70 leading-relaxed">{personaLiveGuidance.detail}</div>
                       </div>
+                      )}
 
-                      {!showAdvancedStudy && (
+                      {showStudyExtras && !showAdvancedStudy && (
                         <div className="bg-paper p-5 rounded-2xl border border-ink/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                           <div>
                             <div className="section-label mb-1">STUDY MAP</div>
@@ -1300,7 +1294,7 @@ export default function App() {
                         </div>
                       )}
 
-                      {showAdvancedStudy && (
+                      {showStudyExtras && showAdvancedStudy && (
                       <div className="bg-paper p-6 lg:p-8 rounded-2xl border border-ink/5 space-y-5">
                         <div className="flex items-center justify-between gap-4 flex-wrap">
                           <div>
@@ -1368,7 +1362,7 @@ export default function App() {
                       </div>
                       )}
 
-                      {showAdvancedStudy && (
+                      {showStudyExtras && showAdvancedStudy && (
                       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
                         <div className="bg-bg-warm/80 p-6 rounded-2xl border border-ink/5">
                           <div className="section-label">COVENANT NODE</div>
@@ -1466,7 +1460,7 @@ export default function App() {
                       </div>
 
                       {/* Deep Dive Panel - Show supplemental chapters */}
-                      {showSupplementalSections && selectedStory && (
+                      {showStudyExtras && showSupplementalSections && selectedStory && (
                         <DeepDivePanel 
                           storyId={selectedStory.id}
                           storyAct={selectedActId ?? 1}
@@ -1477,34 +1471,47 @@ export default function App() {
                   </article>
 
                   {/* Navigation Control */}
-                  <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                    <button 
-                      disabled={selectedStory.id === 1}
-                      onClick={() => handleSelectStory(bibleStories[selectedStory.id - 2])}
-                      className="flex-1 p-6 bg-paper rounded-2xl soft-shadow border border-ink/5 hover:border-olive/20 transition-all group disabled:opacity-30 disabled:pointer-events-none"
-                    >
-                      <div className="text-[10px] font-bold text-clay uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <ChevronLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" /> PREVIOUS STORY
-                      </div>
-                      <div className="font-serif italic text-lg text-olive">
-                        {selectedStory.id > 1 ? bibleStories[selectedStory.id - 2].title : '---'}
-                      </div>
-                    </button>
-                    <button 
-                      disabled={selectedStory.id === 100}
-                      onClick={() => handleSelectStory(bibleStories[selectedStory.id])}
-                      className="flex-1 p-6 bg-paper rounded-2xl soft-shadow border border-ink/5 hover:border-olive/20 transition-all group text-right disabled:opacity-30 disabled:pointer-events-none"
-                    >
-                      <div className="text-[10px] font-bold text-clay uppercase tracking-widest mb-2 flex items-center justify-end gap-2">
-                        NEXT STORY <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
-                      </div>
-                      <div className="font-serif italic text-lg text-olive">
-                        {selectedStory.id < 100 ? bibleStories[selectedStory.id].title : '---'}
-                      </div>
-                    </button>
-                  </div>
+                  {isReadingMode ? (
+                    <div className="pt-4">
+                      <button
+                        disabled={selectedStory.id === 100}
+                        onClick={() => continueWithReinforcement(suggestedNextStory)}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-olive px-5 py-4 text-bg-warm text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90 disabled:opacity-30"
+                      >
+                        Continue to {selectedStory.id < 100 ? bibleStories[selectedStory.id].title : 'the end'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-6 pt-4">
+                      <button 
+                        disabled={selectedStory.id === 1}
+                        onClick={() => handleSelectStory(bibleStories[selectedStory.id - 2])}
+                        className="flex-1 p-6 bg-paper rounded-2xl soft-shadow border border-ink/5 hover:border-olive/20 transition-all group disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        <div className="text-[10px] font-bold text-clay uppercase tracking-widest mb-2 flex items-center gap-2">
+                          <ChevronLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" /> PREVIOUS STORY
+                        </div>
+                        <div className="font-serif italic text-lg text-olive">
+                          {selectedStory.id > 1 ? bibleStories[selectedStory.id - 2].title : '---'}
+                        </div>
+                      </button>
+                      <button 
+                        disabled={selectedStory.id === 100}
+                        onClick={() => handleSelectStory(bibleStories[selectedStory.id])}
+                        className="flex-1 p-6 bg-paper rounded-2xl soft-shadow border border-ink/5 hover:border-olive/20 transition-all group text-right disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        <div className="text-[10px] font-bold text-clay uppercase tracking-widest mb-2 flex items-center justify-end gap-2">
+                          NEXT STORY <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+                        </div>
+                        <div className="font-serif italic text-lg text-olive">
+                          {selectedStory.id < 100 ? bibleStories[selectedStory.id].title : '---'}
+                        </div>
+                      </button>
+                    </div>
+                  )}
 
                   {/* 100 Story Path Grid */}
+                  {showStudyExtras && (
                   <div className="pt-12 border-t border-ink/10">
                     <div className="section-label mb-8">THE 100 STORY PATH</div>
                     <div className="grid grid-cols-5 sm:grid-cols-10 lg:grid-cols-10 gap-3">
@@ -1525,6 +1532,7 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
